@@ -1,0 +1,68 @@
+<!-- index.html --><!DOCTYPE html><html>
+<head>
+  <title>Earn Bangla Taka</title>
+  <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-database-compat.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body { font-family: sans-serif; text-align: center; background: #f7f7f7; }
+    .box { margin: 20px auto; padding: 20px; max-width: 400px; background: #fff; border-radius: 10px; box-shadow: 0 0 5px #ccc; }
+    button { padding: 10px 20px; background: green; color: white; border: none; border-radius: 5px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h2>📺 বিজ্ঞাপন দেখে টাকা আয়</h2>
+    <p>আপনার মোট পয়েন্ট: <span id="points">0</span>৳</p>
+    <button onclick="addPoints()">✅ আমি অ্যাড দেখেছি</button>
+    <br><br>
+    <button onclick="withdraw()">💳 উইথড্র করুন</button>
+  </div>  <script>
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT.firebaseapp.com",
+      databaseURL: "https://YOUR_PROJECT.firebaseio.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT.appspot.com",
+      messagingSenderId: "123456789",
+      appId: "APP_ID"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    const tg = window.Telegram?.WebApp || {};
+    tg.expand?.();
+    const userId = tg.initDataUnsafe?.user?.id || "guest_user";
+
+    const userRef = db.ref("users/" + userId);
+
+    userRef.on("value", snapshot => {
+      const data = snapshot.val();
+      document.getElementById("points").innerText = data?.points || 0;
+    });
+
+    function addPoints() {
+      userRef.get().then(snapshot => {
+        const current = snapshot.val()?.points || 0;
+        userRef.set({ points: current + 1 });
+      });
+    }
+
+    function withdraw() {
+      userRef.get().then(snapshot => {
+        const current = snapshot.val()?.points || 0;
+        if (current >= 10) {
+          alert("Withdraw request পাঠানো হলো!");
+          db.ref("withdrawRequests/" + userId).set({
+            points: current,
+            time: new Date().toISOString()
+          });
+          userRef.set({ points: 0 });
+        } else {
+          alert("ন্যূনতম ১০ পয়েন্ট লাগবে উইথড্র করতে।");
+        }
+      });
+    }
+  </script></body>
+  </html>
